@@ -1,22 +1,36 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { InboxOutlined } from '@ant-design/icons';
+import { Button, message, Upload } from 'antd';
+import { FaCloudUploadAlt } from "react-icons/fa";
+import { Spin } from 'antd';
+const { Dragger } = Upload;
 
-const FileUpload = () => {
+const FileUpload = ({data}) => {
   const [files, setFiles] = useState([]); // Change to array
   const [parsedData, setParsedData] = useState([]); // Store all parsed data
   const [error, setError] = useState(null);
   const [resumeText, setResumeText] = useState(''); // New state for resume text
-
-  const handleFileChange = (event) => {
-    setFiles(Array.from(event.target.files)); // Convert FileList to array
+  const [loading, setLoading] = useState(false);
+  const handleFileChange = (info) => {
+    const { fileList } = info;
+    setFiles(fileList.map(file => file.originFileObj)); // Convert fileList to array of File objects
   };
+
+  console.log(">>>>>>>>>>>>>>>>.", data)
+  
 
   const handleUpload = async () => {
     if (files.length === 0) return alert('Please select files to upload');
-  
+    setLoading(true); // Start loading spinner
     for (const file of files) {
       const formData = new FormData();
       formData.append('resume', file);
+
+
+      if (data) {
+        formData.append('data', JSON.stringify(data)); // Convert `data` to a JSON string
+      }
   
       try {
         const response = await axios.post('http://localhost:5000/upload', formData, {
@@ -42,7 +56,7 @@ const FileUpload = () => {
         setResumeText(response.data.text); // Set the resume text
   
         // Check if any skill score is greater than 70%
-        const hasHighSkillScore = Object.values(skillScores).some(score => score > 70);
+        const hasHighSkillScore = Object.values(skillScores).some(score => score >= 0);
   
         if (hasHighSkillScore) {
           // Append new user data to parsedData state
@@ -52,7 +66,7 @@ const FileUpload = () => {
           const existingData = localStorage.getItem('candidate');
           const parsedExistingData = existingData ? JSON.parse(existingData) : [];
           parsedExistingData.push(newUserData);
-          localStorage.setItem('candidate', JSON.stringify(parsedExistingData));
+          // localStorage.setItem('candidate', JSON.stringify(parsedExistingData));
         }
   
       } catch (error) {
@@ -60,11 +74,9 @@ const FileUpload = () => {
         setError('Error processing the resume. Please try again.');
       }
     }
-  
-    alert('All resumes have been processed and stored in local storage.');
+    setLoading(false); // Stop loading spinner
+    message.success('All resumes have been processed and stored in local storage.');
   };
-  
-
 
   const handleDownloadCSV = () => {
     // Step 1: Retrieve existing data from local storage
@@ -98,17 +110,16 @@ const FileUpload = () => {
       row.push(data.bestSuitedSkill || 'Not mentioned'); // Add Best Suited Skill
       row.push(data.resumeName || 'Not mentioned');
 
-  
       // Add skill scores
       skillHeaders.forEach(skill => {
         row.push(data.skillScores[skill] || 'Not mentioned');
       });
-  
+
       csvRows.push(row.join(',')); // Add row
     });
-  
+
     const csvString = csvRows.join('\n');
-  
+
     // Step 4: Create a Blob and download link
     const blob = new Blob([csvString], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -121,17 +132,22 @@ const FileUpload = () => {
 
   return (
     <div className="container">
-      <h1>Resume Skill Parser</h1>
       
       <div className="form-container">
-        <input 
-          type="file" 
+        <Dragger 
+          name="file" 
+          multiple 
+          action="http://localhost:5000/upload" 
           onChange={handleFileChange} 
-          accept=".pdf, .doc, .docx" 
-          multiple // Allow multiple file selection
-          className="file-input" 
-        />
-        <button className="upload-button" onClick={handleUpload}>Upload Resumes</button>
+          onDrop={(e) => console.log('Dropped files', e.dataTransfer.files)}
+        >
+          <p className="ant-upload-drag-icon">
+            <FaCloudUploadAlt  className='upload'/>
+          </p>
+          <p className="ant-upload-text">Click or drag file to this area to upload</p>
+         
+        </Dragger>
+        <Button type='primary' className='uploadResume' onClick={handleUpload}>Upload Resumes</Button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -146,9 +162,6 @@ const FileUpload = () => {
               <p>Email: {data.email}</p>
               <p>Phone: {data.phone}</p>
               <p>College: {data.college}</p>
-              
-              <p>Score: {data.score}%</p>
-
               <p>Best Suited Skill: {data.bestSuitedSkill}</p>
               <h5>Skills Breakdown:</h5>
               <ul>
@@ -160,15 +173,8 @@ const FileUpload = () => {
           ))}
         </div>
       )}
-{/* {resumeText && (
-  <div className="resume-text">
-    <h3>Resume Text:</h3>
-    <p>{resumeText}</p> {/* Display the resume text here */}
-  {/* </div> */}
-{/* )} */}
-      <button onClick={handleDownloadCSV}>Download</button>
 
-
+      <Button type='primary' className='downloadCSV' onClick={handleDownloadCSV}>Download Excel</Button>
     </div>
   );
 };

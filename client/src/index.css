@@ -1,0 +1,27 @@
+body {
+    background: linear-gradient(#ccbdff, #c7f9ff, #8d85ff, #ffbdc6);
+    height: 100vh;
+  
+}
+
+
+
+.uploadResume{
+    margin-top: 15px;
+    height: 40px;
+}
+
+
+.upload{
+    font-size: 150px;
+    color: #4096FF;
+}
+
+.downloadCSV{
+    float: right;
+    margin-top: -40px;
+    height: 40px;
+}
+
+
+

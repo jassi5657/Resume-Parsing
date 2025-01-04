@@ -15,19 +15,19 @@ app.use(cors());
 const upload = multer({ dest: 'uploads/' });
 
 // Required skills to check
-const requiredSkills = ['Java', 'Node', 'Python', 'C/C++'];
+// const requiredSkills = ['Java', 'Node', 'Python', 'C/C++'];
+let requiredSkills = [];
+
+
+ 
+
+
 
 // Define subskills for each required skill
-const skillSubskills = {
-  Java: ['Core Java', 'Java 8', 'Collections', 'JDBC', 'SQL', 'MYSQL', 'Exception Handling', 'Multithreading', 'DSA', 'Spring Boot', 'REST API', 'MVC Framework', 'AWS', 'Azure'],
-  Python: ['Django', 'Flask', 'ORM', 'SQLAlchemy', 'REST API', 'Pandas', 'Numpy', 'OOPs'],
-  "Node": ['Express', 'REST API', 'Socket.io', 'JWT Authentication', "JWT", "Joi", "Toaster",'fs', 'path', 'os', 'http', 'https', 'events', 'Global vs local packages', 'Building', 'Middleware', 'Routing', 'Promises', 'async/await', 'Clustering', 'WebSocket', 'redis', 'Caching', 'Jest'],
-  "C/C++": ['Memory Management', 'Pointers', 'Data Structures', 'Searching and Sorting Algorithms'],
-};
+let skillSubskills = {};
 
 // Function to add a subskill
 function addSubskill(skill, subskill) {
-  // Convert skill to lowercase for case-insensitive handling
   const lowerSkill = skill.toLowerCase();
 
   // Check if the skill exists in the object
@@ -47,41 +47,52 @@ function addSubskill(skill, subskill) {
 }
 
 // Function to extract skills from the resume text
-const extractSkills = (text) => {
-  // Improved pattern to account for different variations of skills
-  const skillPattern = /\b(Java|Node(?:\.js)?|Python|C\/C\+|C)\b/g;
+const extractSkills = (text, selectedSkills) => {
+  // Convert selected skills into a regex pattern
+  const skillPattern = new RegExp(`\\b(${selectedSkills.join('|')})\\b`, 'gi');
+
+  // Match the skills in the text
   const detectedSkills = text.match(skillPattern) || [];
 
-  // Merge and deduplicate detected skills
-  const mergedSkills = detectedSkills.map(skill => {
-    if (skill === 'Node' || skill === 'Node.js') {
-      return 'Node'; // Normalize Node.js and Node to "Node"
-    }
-    if (skill === 'C' || skill === 'C++') {
-      return 'C/C++'; // Normalize C and C++ to "C/C++"
-    }
-    return skill;
-  });
+  // Normalize and deduplicate detected skills
+  const uniqueSkills = _.uniq(
+    detectedSkills.map(skill => {
+      if (skill.toLowerCase() === 'node' || skill.toLowerCase() === 'node.js') {
+        return 'Node'; // Normalize Node.js and Node to "Node"
+      }
+      if (['c', 'c++'].includes(skill.toLowerCase())) {
+        return 'C/C++'; // Normalize C and C++ to "C/C++"
+      }
+      return skill;
+    })
+  );
 
-  const uniqueSkills = _.uniq(mergedSkills);
   return uniqueSkills;
 };
+
 
 
 // Check for subskills in the text
 const extractSubskills = (text, skill) => {
   console.log(`Extracting subskills for skill: ${skill}`); // Log the skill being checked
 
-  if (!skillSubskills[skill]) {
+  // Normalize the skill key to lowercase for lookup
+  const normalizedSkill = skill.toLowerCase();
+  // Check if the skill exists in the object (case-insensitive)
+  if (!skillSubskills[normalizedSkill]) {
     console.log(`No subskills found for skill: ${skill}`); // Log if no subskills are available
     return [];
   }
-
-  const foundSubskills = skillSubskills[skill].filter(subskill => text.includes(subskill));
-
-  console.log(`Found subskills for ${skill}: ${foundSubskills.join(', ')}`); // Log the found subskills
+  // Normalize subskills and text to lowercase for case-insensitive comparison
+  const foundSubskills = skillSubskills[normalizedSkill].filter(subskill =>
+    text.toLowerCase().includes(subskill.toLowerCase())
+  );
   return foundSubskills;
 };
+
+
+
+
 
 const extractCertifications = (text) => {
   const certPattern = /(Acquired|Obtained|Earned|Certificate|Certified|Course).*?\./g;
@@ -155,31 +166,60 @@ const extractProjects = (text) => {
   return projects;
 };
 
+
+
+
+const checkSkillsInSection = (text, skill, label, scoreValue) => {
+  const sectionPattern = new RegExp(`${label}[\\s\\S]*?(?=Education|Projects|Certifications|$)`, 'i');
+  const sectionMatch = text.match(sectionPattern);
+
+  if (sectionMatch && sectionMatch[0].toLowerCase().includes(skill.toLowerCase())) {
+    console.log(`${skill}: Detected skill in ${label}, adding ${scoreValue}% score`);
+    return scoreValue;
+  }
+
+  return 0;
+};
+
+
 // Function to calculate the score based on skills, projects, and certifications
-const calculateScore = (skillsDetected, projects, certifications, text) => {
+// Function to calculate the score based on skills, projects, and certifications
+const calculateScore = (skillsDetected, projects, certifications, text,selectedSkillsScore,selectedSubSkillScore,selectedProjectScore,selectedCertificateScore) => {
   let skillScores = {};
   let totalScore = 0;
 
-  console.log("------------------------------------------------------------")
+  console.log("------------------------------------------------------------");
 
-  requiredSkills.forEach(skill => {
+  requiredSkills.forEach((skill, index) => {
     const skillLower = skill.toLowerCase();
     let skillScore = 0;
 
-    console.log("*****************************************")
+ 
 
+
+    console.log("*****************************************");
+    
+ 
     // Check if the primary skill is detected
-    if (skillsDetected.some(s => s.toLowerCase() === skillLower)) {
-      skillScore += 10; // Add 10% for the primary skill
-      console.log(`${skill}: Detected skill, adding 10% score`);
+    const isSkillDetected = skillsDetected.some(s => s.toLowerCase() === skillLower);
+    
+    
+    if (isSkillDetected) {
+      const scoreToAdd = selectedSkillsScore; // Use the frontend-provided score or default to 10%
+      skillScore += scoreToAdd;
+      console.log(`${skill}: Detected skill, adding ${scoreToAdd}% score`);
     }
+
+    skillScore += checkSkillsInSection(text, skill, "Experience Summary", 20); // Add 10% for Experience Summary
+    skillScore += checkSkillsInSection(text, skill, "Professional Experience", 20); // Add 20% for Professional Experience
+    skillScore += checkSkillsInSection(text, skill, "Work Experience", 20); // Add 20% for Professional Experience
 
     // Check for subskills and add score for each found
     const subskillsDetected = extractSubskills(text, skill);
     if (subskillsDetected.length > 0) {
       subskillsDetected.forEach(subskill => {
-        skillScore += 10; // Add 10% for each subskill detected
-        console.log(`${skill}: Detected subskill "${subskill}", adding 10% score`);
+        skillScore += selectedSubSkillScore; // Add 10% for each subskill detected
+        console.log(`${skill}: Detected subskill "${subskill}", adding ${selectedSubSkillScore} score`);
       });
     }
 
@@ -195,23 +235,23 @@ const calculateScore = (skillsDetected, projects, certifications, text) => {
         projectDescription.includes(skillLower)
       ) {
         projectMatchFound = true;
-        console.log(`${skill}: Detected relevant skill or subskill in project "${project.title}", adding 20% score from project`);
+        console.log(`${skill}: Detected relevant skill or subskill in project "${project.title}", adding ${selectedProjectScore || 0} score from project`);
       }
 
       if (projectMatchFound) {
-        skillScore += 20; // Relevant project skill match
+        skillScore += selectedProjectScore || 0; // Relevant project skill match
       }
     });
 
     // Only add project and certification points if skill is detected
     if (skillScore > 0) {
       if (certifications.some(cert => cert.toLowerCase().includes(skillLower))) {
-        skillScore += 15; // Relevant certification
-        console.log(`${skill}: Detected relevant certification, adding 15% score`);
+        skillScore += selectedCertificateScore || 0; // Relevant certification
+        console.log(`${skill}: Detected relevant certification, adding ${selectedCertificateScore || 0} score`);
       }
     }
 
-    // Cap the skill score at 100%
+    // Cap the skill score at 100%  
     skillScores[skill] = Math.min(skillScore, 100);
     totalScore += skillScores[skill];
 
@@ -224,6 +264,9 @@ const calculateScore = (skillsDetected, projects, certifications, text) => {
   console.log(`Total score for all skills: ${totalScore}%`);
   return { skillScores, totalScore };
 };
+
+
+
 const extractEducationPercentages = (text) => {
   // Define patterns for each education level with the required constraints
   const educationPatterns = [
@@ -254,42 +297,29 @@ const extractEducationPercentages = (text) => {
 };
 
 
-
-
-
-
-
-
-// const extractEducationPercentages = (text) => {
-//   // Define patterns to match percentages or CGPA for each education level
-//   const educationPatterns = [
-//     { level: '10th', pattern: /(Matric|Senior\s*Secondary|10th| Secondary\s*Secondary)[\s\S]*?(\d{2,3}[%]|(?:\d\.\d{1,2})\s*CGPA)/i },
-//     { level: '12th', pattern: /(Higher\s*Secondary|10\+2|12th)[\s\S]*?(\d{2,3}[%]|(?:\d\.\d{1,2})\s*CGPA)/i },
-//     { level: 'UG', pattern: /(Bachelor[\s\S]*?)(\d{2,3}[%]|(?:\d\.\d{1,2})\s*CGPA)/i },
-//     { level: 'PG', pattern: /(Master[\s\S]*?)(\d{2,3}[%]|(?:\d\.\d{1,2})\s*CGPA)/i },
-//   ];
-
-//   const educationPercentages = {};
-
-//   educationPatterns.forEach(({ level, pattern }) => {
-//     const match = text.match(pattern);
-//     if (match) {
-//       educationPercentages[level] = match[2]; // Capture the percentage or CGPA
-//     } else {
-//       educationPercentages[level] = "Not Mentioned"; // If no match found, return "Not Mentioned"
-//     }
-//   });
-
-//   return educationPercentages;
-// };
-
-
-
-
 // Route for handling resume upload
 app.post('/upload', upload.single('resume'), (req, res) => {
   const filePath = req.file.path;
   let text = '';
+
+  // Extract and parse the `data` object from the front-end
+  const frontEndData = req.body.data ? JSON.parse(req.body.data) : {};
+  const selectedSkills = frontEndData.selectedSkills || [];
+  const selectedSubSkill = frontEndData.subskills || [];
+  skillSubskills = selectedSubSkill
+  const selectedSkillsScore = frontEndData.skillScore;
+  const selectedSubSkillScore = frontEndData.subSkillScore;
+  const selectedProjectScore = frontEndData.projectScore;
+  const selectedCertificateScore = frontEndData.certificateScore;
+
+
+
+
+
+  // Update the requiredSkills array with the selectedSkills from the front-end
+  if (selectedSkills.length > 0) {
+    requiredSkills = selectedSkills;
+  }
 
   if (req.file.mimetype === 'application/pdf') {
     const pdfBuffer = fs.readFileSync(filePath);
@@ -297,7 +327,16 @@ app.post('/upload', upload.single('resume'), (req, res) => {
       .then(data => {
         text = data.text;
 
-        const skillsDetected = extractSkills(text);
+        if (selectedSkills.length > 0) {
+          requiredSkills = selectedSkills; // Update global `requiredSkills` array
+        }
+
+
+
+        // const skillsDetected = extractSkills(text);
+        const skillsDetected = extractSkills(text, selectedSkills);
+
+
         const certifications = extractCertifications(text);
         const name = extractName(text);
         const email = extractEmail(text);
@@ -310,7 +349,7 @@ app.post('/upload', upload.single('resume'), (req, res) => {
         // Extract projects from the resume
         const projects = extractProjects(text);
 
-        const { skillScores, totalScore } = calculateScore(skillsDetected, projects, certifications, text);
+        const { skillScores, totalScore } = calculateScore(skillsDetected, projects, certifications, text,selectedSkillsScore,selectedSubSkillScore,selectedProjectScore,selectedCertificateScore);
 
         res.json({
           text,
@@ -362,7 +401,6 @@ app.post('/upload', upload.single('resume'), (req, res) => {
     res.status(400).json({ error: 'Invalid file type. Only PDF and DOCX are supported.' });
   }
 });
-
 
 // Start the server
 app.listen(port, () => {
