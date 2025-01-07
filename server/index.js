@@ -9,6 +9,14 @@ const app = express();
 const port = 5000;
 const _ = require('lodash');
 
+
+
+app.use(cors({
+  origin: 'https://resume-parsing-client.vercel.app', // Update with your client URL
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(cors());
 
 app.get("/", (req,res)=>{
