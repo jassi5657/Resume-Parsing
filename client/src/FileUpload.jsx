@@ -137,7 +137,7 @@ const FileUpload = ({data}) => {
         <Dragger 
           name="file" 
           multiple 
-          action="http://localhost:5000/upload" 
+          action="https://resume-parsing-server.vercel.app/upload" 
           onChange={handleFileChange} 
           onDrop={(e) => console.log('Dropped files', e.dataTransfer.files)}
         >
