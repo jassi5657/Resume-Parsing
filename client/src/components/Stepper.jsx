@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Steps, Input, Button, Select, Row, Col, Typography, Checkbox, Card, Space } from 'antd';
+import { Steps, Input, Button, Select, Row, Col, Typography, Checkbox, Card, Space, message } from 'antd';
 import "./stepper.css";
 import FileUpload from '../FileUpload';
 import { MdCreditScore, MdDelete } from "react-icons/md";
 import { GrScorecard } from "react-icons/gr";
 import { FaCloudUploadAlt } from "react-icons/fa";
+import CustomSelect from './select/CustomeSelect';
+import { useForm } from 'react-hook-form';
+import CustomInput from './input/CustomeInput';
 
 const Stepper = () => {
     const [currentStep, setCurrentStep] = useState(0); // State to track the current step
@@ -19,24 +22,27 @@ const Stepper = () => {
     const [projectScore, setProjectScore] = useState('');
     const [certificateScore, setCertificateScore] = useState('');
 
+    const { handleSubmit, control } = useForm()
 
 
-        const data = {
-            selectedSkills,
-            checkedSkills,
-            subskills,
-            project,
-            certificate,
-            ...skillScore && {skillScore:Number(skillScore)} || 0,
-            ...subSkillScore && {subSkillScore:Number(subSkillScore)} || 0,
-            ...projectScore && {projectScore:Number(projectScore)} || 0,
-            ...certificateScore && {certificateScore:Number(certificateScore)} || 0 ,
-        };
-      
-    const handleNextStep = () => {
-        
-            setCurrentStep(currentStep + 1); // Move to the next step
+
+    const data = {
+        selectedSkills,
+        checkedSkills,
+        subskills,
+        project,
+        certificate,
+        ...skillScore && { skillScore: Number(skillScore) } || 0,
+        ...subSkillScore && { subSkillScore: Number(subSkillScore) } || 0,
+        ...projectScore && { projectScore: Number(projectScore) } || 0,
+        ...certificateScore && { certificateScore: Number(certificateScore) } || 0,
     };
+
+    const handleNextStep = handleSubmit(() => {
+        setCurrentStep(currentStep + 1); // Move to the next step
+
+    })
+
 
     const handlePrevStep = () => {
         if (currentStep > 0) {
@@ -90,42 +96,30 @@ const Stepper = () => {
     }
 
 
-    //  useEffect(() => {
-    //     const handleBeforeUnload = () => {
-    //         localStorage.removeItem('step1Data'); // Remove data from local storage when the tab is closed
-    //     };
-
-    //     window.addEventListener('beforeunload', handleBeforeUnload);
-
-    //     return () => {
-    //         window.removeEventListener('beforeunload', handleBeforeUnload); // Cleanup the event listener
-    //     };
-    // }, []);
- 
 
     return (
         <div>
-            
+
             <div className='steps'>
-            <Steps
-                size="small"
-                current={currentStep}
-                items={[
-                    {
-                      title: 'Skills',
-                      icon: <MdCreditScore style={{fontSize:"30px"}} />,
-                    },
-                    {
-                      title: 'Scoring',
-                      icon: <GrScorecard />,
-                    },
-                    {
-                      title: 'Upload',
-                      icon: <FaCloudUploadAlt  />,
-                    },
-                    
-                  ]}
-            />
+                <Steps
+                    size="small"
+                    current={currentStep}
+                    items={[
+                        {
+                            title: 'Skills',
+                            icon: <MdCreditScore style={{ fontSize: "30px" }} />,
+                        },
+                        {
+                            title: 'Scoring',
+                            icon: <GrScorecard />,
+                        },
+                        {
+                            title: 'Upload',
+                            icon: <FaCloudUploadAlt />,
+                        },
+
+                    ]}
+                />
             </div>
 
             <br />
@@ -140,7 +134,10 @@ const Stepper = () => {
                             <Col xs={24} lg={6} md={8}>
                                 <Typography className='typo'>Please enter the Skills</Typography>
                                 {currentStep === 0 && (
-                                    <Select
+                                    <CustomSelect
+                                        control={control}
+                                        rules={{ required: 'Please enter a Skill' }}
+                                        name={"jassi"}
                                         mode="tags"
                                         onChange={(value) => setSelectedSkills(value)} // Update selected skills
                                         style={{ width: '100%' }}
@@ -149,13 +146,13 @@ const Stepper = () => {
                                 )}
                                 <br />
                                 <br />
-                                
+
                             </Col>
 
                             {selectedSkills.length > 0 && (
                                 <Col xs={24} lg={6} md={8}>
                                     <p className='typo'>Do these Skills Have their subSkills?</p>
-                                    <Button type="primary" className='btn2' onClick={ () => handleYesClick(true) }>Yes</Button>
+                                    <Button type="primary" className='btn2' onClick={() => handleYesClick(true)}>Yes</Button>
                                 </Col>
                             )}
 
@@ -171,7 +168,7 @@ const Stepper = () => {
                                             <div className='skills'>{skill}</div>
                                         </Checkbox>
                                     ))}
-                                    <MdDelete className='subSkillDlt' onClick={ () => handleYesClick(false) }/>
+                                    <MdDelete className='subSkillDlt' onClick={() => handleYesClick(false)} />
                                 </Col>
                             )}
 
@@ -215,8 +212,8 @@ const Stepper = () => {
                             <Col xs={24} lg={6} md={8}>
                                 <Typography className='typo'>Do you want to give score for Project?</Typography>
                                 <Space>
-                                <Button type='primary' onClick={() => handleProject(true)}>Yes</Button>
-                                <Button onClick={() => handleProject(false)}>No</Button>
+                                    <Button type='primary' onClick={() => handleProject(true)}>Yes</Button>
+                                    <Button onClick={() => handleProject(false)}>No</Button>
                                 </Space>
                             </Col>
 
@@ -224,13 +221,13 @@ const Stepper = () => {
                             <Col xs={24} lg={6} md={8}>
                                 <Typography className='typo'>Do you want to give score for Certifications?</Typography>
                                 <Space>
-                                <Button type='primary' onClick={() => handleCertificate(true)}>Yes</Button>
-                                <Button onClick={() => handleCertificate(false)}>No</Button>
+                                    <Button type='primary' onClick={() => handleCertificate(true)}>Yes</Button>
+                                    <Button onClick={() => handleCertificate(false)}>No</Button>
                                 </Space>
                             </Col>
 
-<br />
-<br />
+                            <br />
+                            <br />
 
                             <Col xs={24} lg={6} md={8}>
                                 <Typography className='typo'>Please mentioned  how do you want to give scoring</Typography>
@@ -241,11 +238,12 @@ const Stepper = () => {
                             <Col xs={24} lg={6} md={8}>
                                 <Typography className='typo'>Score For Skills :</Typography>
                                 <Input
-                                className='skillScoring'
+                                    name="skillScore"
+                                    className='skillScoring'
                                     placeholder='scoring...'
                                     value={skillScore}
                                     onChange={(e) => setSkillScore(e.target.value)}
-
+                                    rules={{ required: "please enter skill Score" }}
                                 />
                             </Col>
 
@@ -253,15 +251,16 @@ const Stepper = () => {
                             {
                                 showSubskills && (
                                     <Col xs={24} lg={6} md={8}>
-                                <Typography className='typo'>Score For Sub Skills :</Typography>
-                                <Input
-                                className='skillScoring'
+                                        <Typography className='typo'>Score For Sub Skills :</Typography>
+                                        <Input
+                                            name="subSkillScore"
+                                            className='skillScoring'
 
-                                    placeholder='scoring...'
-                                    value={subSkillScore}
-                                    onChange={(e) => setSubSkillScore(e.target.value)}
-                                />
-                            </Col>
+                                            placeholder='scoring...'
+                                            value={subSkillScore}
+                                            onChange={(e) => setSubSkillScore(e.target.value)}
+                                        />
+                                    </Col>
                                 )
                             }
 
@@ -270,7 +269,8 @@ const Stepper = () => {
                                     <Col xs={24} lg={6} md={8}>
                                         <Typography className='typo'>Score For Per Project :</Typography>
                                         <Input
-                                className='skillScoring'
+                                            name="projectScore"
+                                            className='skillScoring'
 
                                             placeholder='scoring...'
                                             value={projectScore}
@@ -285,11 +285,12 @@ const Stepper = () => {
                                     <Col xs={24} lg={6} md={8}>
                                         <Typography className='typo'>Score For Certifications :</Typography>
                                         <Input
-                                className='skillScoring'
+                                            name="certificateScore"
+                                            className='skillScoring'
 
                                             placeholder='scoring...'
                                             value={certificateScore}
-                            onChange={(e) => setCertificateScore(e.target.value)}
+                                            onChange={(e) => setCertificateScore(e.target.value)}
                                         />
                                     </Col>
 
@@ -312,7 +313,7 @@ const Stepper = () => {
                 currentStep === 2 && (
                     <Card className='card'>
 
-                        <FileUpload data={data}/>
+                        <FileUpload data={data} />
                     </Card>
                 )
             }
@@ -332,14 +333,14 @@ const Stepper = () => {
             )}
 
 
-{
-    currentStep < 2 &&(
-        
-        <Button type="primary" onClick={handleNextStep} className='next'>
-        Next Step
-    </Button>
-    )
-}
+            {
+                currentStep < 2 && (
+
+                    <Button type="primary" onClick={handleSubmit(handleNextStep)} className='next'>
+                        Next Step
+                    </Button>
+                )
+            }
         </div>
     );
 };

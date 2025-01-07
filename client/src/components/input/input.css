@@ -1,0 +1,100 @@
+/* .custom-input {
+  height: var(--custom-input-height);
+  padding: var(--custom-input-padding);
+  font-size: var(--custom-font-size);
+  line-height: var(--custom-line-height);
+  font-weight: var(--custom-font-weight) !important;
+  border: 1px solid var(--custom-border-color);
+  border-radius: var(--custom-border-radius);
+  box-shadow: var(--custom-box-shadow);
+}
+
+.custom-input:hover,
+.custom-input:focus {
+  border-color: var(--custom-focus-border-color);
+  box-shadow: var(--custom-focus-box-shadow);
+}
+
+.custom-input.error {
+  border-color: var(--color-error);
+  box-shadow: var(--error-box-shadow);
+}
+
+.custom-input.error:hover,
+.custom-input.error:focus {
+  border-color: var(--color-error);
+  box-shadow: var(--error-box-shadow);
+}
+
+.custom-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.custom-input-label {
+  margin-bottom: 4px;
+  font-size: var(--custom-label-font-size);
+  color: var(--custom-label-color);
+}
+
+.custom-input-error-message {
+  margin-top: 2px;
+  font-size: var(--custom-error-message-font-size);
+  color: var(--color-error);
+} */
+
+
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+
+
+.custom-input {
+  height: var(--custom-input-height);
+  padding: var(--custom-input-padding);
+  font-size: var(--custom-font-size);
+  line-height: var(--custom-line-height);
+  font-weight: var(--custom-font-weight) !important;
+}
+
+.custom-input:hover,
+.custom-input:focus {
+  border-color: var(--custom-focus-border-color);
+  box-shadow: var(--custom-focus-box-shadow);
+}
+
+.custom-input.error {
+  border-color: var(--color-error);
+  box-shadow: var(--error-box-shadow);
+}
+
+.custom-input.error:hover,
+.custom-input.error:focus {
+  border-color: var(--color-error);
+  box-shadow: var(--error-box-shadow);
+}
+
+.custom-input-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+}
+
+.custom-input-label {
+  margin-bottom: 4px;
+  font-size: var(--custom-label-font-size);
+  color: var(--custom-label-color);
+}
+
+.custom-input-error-message {
+  margin-top: 2px;
+  font-size: var(--custom-error-message-font-size);
+  color: var(--color-error);
+}
