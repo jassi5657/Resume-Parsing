@@ -304,6 +304,7 @@ const extractEducationPercentages = (text) => {
 
 // Route for handling resume upload
 app.post('/upload', upload.single('resume'), (req, res) => {
+  console.log('Upload route hit');
   const filePath = req.file.path;
   let text = '';
 
