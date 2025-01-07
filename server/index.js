@@ -9,19 +9,18 @@ const app = express();
 const port = 5000;
 const _ = require('lodash');
 
+app.use(cors(
+  {
+    origin:["https://resume-parsing-client.vercel.app"],
+    methods: ["GET", "POST"],
+    credentials:true
+  }
+));
 
+app.use(express.json())
 
-app.use(cors({
-  origin: 'https://resume-parsing-client.vercel.app', // Update with your client URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
-
-app.use(cors());
-
-app.get("/", (req,res)=>{
-  res.send("server is Running")
-
+app.get("/",(req,res)=>{
+  res.send("server is running")
 })
 
 // Set up multer for file uploads
@@ -417,5 +416,5 @@ app.post('/upload', upload.single('resume'), (req, res) => {
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server is running on :${port}`);
+  console.log(`Server is running on http://localhost:${port}`);
 });
