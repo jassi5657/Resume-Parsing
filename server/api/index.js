@@ -17,7 +17,9 @@ app.get("/", (req,res)=>{
 })
 
 // Set up multer for file uploads
-const upload = multer({ dest: 'uploads/' });
+// const upload = multer({ dest: 'uploads/' });
+const upload = multer({ storage: multer.memoryStorage() });
+
 
 // Required skills to check
 // const requiredSkills = ['Java', 'Node', 'Python', 'C/C++'];
@@ -328,7 +330,9 @@ app.post('/upload', upload.single('resume'), (req, res) => {
   }
 
   if (req.file.mimetype === 'application/pdf') {
-    const pdfBuffer = fs.readFileSync(filePath);
+    // const pdfBuffer = fs.readFileSync(filePath);
+    const pdfBuffer = req.file.buffer;
+
     pdfParse(pdfBuffer)
       .then(data => {
         text = data.text;
@@ -371,7 +375,8 @@ app.post('/upload', upload.single('resume'), (req, res) => {
       })
       .catch(error => res.status(500).json({ error: 'Error parsing PDF' }));
   } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-    textract.fromFileWithPath(filePath, (error, text) => {
+    textract.fromBufferWithName(req.file.originalname, req.file.buffer, (error, text) => {
+
       if (error) {
         return res.status(500).json({ error: 'Error extracting text from DOCX file' });
       }
@@ -412,3 +417,6 @@ app.post('/upload', upload.single('resume'), (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on :${port}`);
 });
+
+
+module.exports = app;
