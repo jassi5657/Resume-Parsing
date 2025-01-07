@@ -17,9 +17,7 @@ app.get("/", (req,res)=>{
 })
 
 // Set up multer for file uploads
-// const upload = multer({ dest: 'uploads/' });
-const upload = multer({ storage: multer.memoryStorage() });
-
+const upload = multer({ dest: 'uploads/' });
 
 // Required skills to check
 // const requiredSkills = ['Java', 'Node', 'Python', 'C/C++'];
@@ -306,7 +304,6 @@ const extractEducationPercentages = (text) => {
 
 // Route for handling resume upload
 app.post('/upload', upload.single('resume'), (req, res) => {
-  console.log('Upload route hit');
   const filePath = req.file.path;
   let text = '';
 
@@ -330,9 +327,7 @@ app.post('/upload', upload.single('resume'), (req, res) => {
   }
 
   if (req.file.mimetype === 'application/pdf') {
-    // const pdfBuffer = fs.readFileSync(filePath);
-    const pdfBuffer = req.file.buffer;
-
+    const pdfBuffer = fs.readFileSync(filePath);
     pdfParse(pdfBuffer)
       .then(data => {
         text = data.text;
@@ -375,8 +370,7 @@ app.post('/upload', upload.single('resume'), (req, res) => {
       })
       .catch(error => res.status(500).json({ error: 'Error parsing PDF' }));
   } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
-    textract.fromBufferWithName(req.file.originalname, req.file.buffer, (error, text) => {
-
+    textract.fromFileWithPath(filePath, (error, text) => {
       if (error) {
         return res.status(500).json({ error: 'Error extracting text from DOCX file' });
       }
@@ -417,6 +411,3 @@ app.post('/upload', upload.single('resume'), (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running on :${port}`);
 });
-
-
-module.exports = app;
