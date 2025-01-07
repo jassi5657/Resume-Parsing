@@ -33,7 +33,7 @@ const FileUpload = ({data}) => {
       }
   
       try {
-        const response = await axios.post('https://resume-parsing-server.vercel/upload', formData, {
+        const response = await axios.post('https://resume-parsing-server.vercel', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
   
@@ -137,7 +137,7 @@ const FileUpload = ({data}) => {
         <Dragger 
           name="file" 
           multiple 
-          action="https://resume-parsing-server.vercel.app/upload" 
+          action="https://resume-parsing-server.vercel.app" 
           onChange={handleFileChange} 
           onDrop={(e) => console.log('Dropped files', e.dataTransfer.files)}
         >
