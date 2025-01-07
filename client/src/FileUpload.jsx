@@ -33,7 +33,7 @@ const FileUpload = ({data}) => {
       }
   
       try {
-        const response = await axios.post('https://resume-parsing-server.vercel', formData, {
+        const response = await axios.post('https://resume-parsing-server.vercel/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
   
