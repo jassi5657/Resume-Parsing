@@ -5,9 +5,11 @@ const textract = require('textract');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors'); // Import cors
-const app = express();
 const port = 5000;
 const _ = require('lodash');
+
+const app = express();
+
 
 app.use(cors(
   {
@@ -17,11 +19,16 @@ app.use(cors(
   }
 ));
 
+
+
+
+
 app.use(express.json())
 
-app.get("/",(req,res)=>{
-  res.send("server is running")
+app.get("/", (req, res) => {
+  res.json("Hello");
 })
+
 
 // Set up multer for file uploads
 const upload = multer({ dest: 'uploads/' });
