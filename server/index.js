@@ -5,30 +5,11 @@ const textract = require('textract');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors'); // Import cors
+const app = express();
 const port = 5000;
 const _ = require('lodash');
 
-const app = express();
-
-
-app.use(cors(
-  {
-    origin:["https://resume-parsing-client.vercel.app"],
-    methods: ["GET", "POST"],
-    credentials:true
-  }
-));
-
-
-
-
-
-app.use(express.json())
-
-app.get("/", (req, res) => {
-  res.json("Hello");
-})
-
+app.use(cors());
 
 // Set up multer for file uploads
 const upload = multer({ dest: 'uploads/' });

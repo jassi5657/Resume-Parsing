@@ -33,7 +33,7 @@ const FileUpload = ({data}) => {
       }
   
       try {
-        const response = await axios.post('http://localhost:5000/upload', formData, {
+        const response = await axios.post('https://resume-parsing-server-a9p3.onrender.com//upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
   
@@ -137,7 +137,7 @@ const FileUpload = ({data}) => {
         <Dragger 
           name="file" 
           multiple 
-          action="http://localhost:5000/upload" 
+          action="https://resume-parsing-server-a9p3.onrender.com/upload" 
           onChange={handleFileChange} 
           onDrop={(e) => console.log('Dropped files', e.dataTransfer.files)}
         >
