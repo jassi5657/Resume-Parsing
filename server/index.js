@@ -11,40 +11,24 @@ const _ = require('lodash');
 
 app.use(cors());
 
-// Set up multer for file uploads
-const upload = multer({ dest: 'uploads/' });
+app.get("/",(req,res)=>{
+  res.send("server is running")
+})
 
-// Required skills to check
-// const requiredSkills = ['Java', 'Node', 'Python', 'C/C++'];
+// Set up multer for file uploads
+// const upload = multer({ dest: 'uploads' });
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+const upload = multer({ dest: 'uploads/' });
 let requiredSkills = [];
 
-
- 
-
-
-
-// Define subskills for each required skill
 let skillSubskills = {};
 
-// Function to add a subskill
-function addSubskill(skill, subskill) {
-  const lowerSkill = skill.toLowerCase();
 
-  // Check if the skill exists in the object
-  if (skillSubskills[skill] || skillSubskills[lowerSkill]) {
-    // Use the original skill if it exists, otherwise use the lowercase version
-    const existingSkill = skillSubskills[skill] ? skill : lowerSkill;
-
-    // Check if the subskill already exists to avoid duplicates
-    if (!skillSubskills[existingSkill].includes(subskill)) {
-      skillSubskills[existingSkill].push(subskill);
-    } else {
-      console.log(`${subskill} already exists under ${existingSkill}.`);
-    }
-  } else {
-    console.log(`Skill ${skill} does not exist.`);
-  }
-}
 
 // Function to extract skills from the resume text
 const extractSkills = (text, selectedSkills) => {
@@ -150,7 +134,6 @@ const extractName = (text) => {
 
 
 const extractProjects = (text) => {
-  // Define a regex to capture projects - assuming format like "Project Title | Skills Used"
   const projectPattern = /([A-Za-z0-9\s\-\_]+?)\s*\|\s*(.*?)\s*(\d{4})/g; // Example regex pattern for Project Title | Skills | Date
   let projects = [];
   let match;
@@ -182,8 +165,6 @@ const checkSkillsInSection = (text, skill, label, scoreValue) => {
 };
 
 
-// Function to calculate the score based on skills, projects, and certifications
-// Function to calculate the score based on skills, projects, and certifications
 const calculateScore = (skillsDetected, projects, certifications, text,selectedSkillsScore,selectedSubSkillScore,selectedProjectScore,selectedCertificateScore) => {
   let skillScores = {};
   let totalScore = 0;
