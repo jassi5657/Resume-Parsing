@@ -1,156 +1,153 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { InboxOutlined } from '@ant-design/icons';
 import { Button, message, Upload } from 'antd';
 import { FaCloudUploadAlt } from "react-icons/fa";
 import { Spin } from 'antd';
+
 const { Dragger } = Upload;
 
-const FileUpload = ({data}) => {
-  const [files, setFiles] = useState([]); // Change to array
-  const [parsedData, setParsedData] = useState([]); // Store all parsed data
+const FileUpload = ({ data }) => {
+  const [files, setFiles] = useState([]);
+  const [parsedData, setParsedData] = useState([]);
   const [error, setError] = useState(null);
-  const [resumeText, setResumeText] = useState(''); // New state for resume text
+  const [resumeText, setResumeText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadAttempted, setUploadAttempted] = useState(false); // Track if upload was attempted
+
   const handleFileChange = (info) => {
     const { fileList } = info;
-    setFiles(fileList.map(file => file.originFileObj)); // Convert fileList to array of File objects
+    setFiles(fileList.map(file => file.originFileObj));
   };
 
-  console.log(">>>>>>>>>>>>>>>>.", data)
-  
-
   const handleUpload = async () => {
-    if (files.length === 0) return alert('Please select files to upload');
-    setLoading(true); // Start loading spinner
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append('resume', file);
-
-
-      if (data) {
-        formData.append('data', JSON.stringify(data)); // Convert `data` to a JSON string
-      }
+    if (files.length === 0) {
+      alert('Please select files to upload');
+      return;
+    }
   
-      try {
-        const response = await axios.post('https://resume-parsing-server-a9p3.onrender.com/upload', formData, {
+    setLoading(true); // Show spinner
+    setUploadAttempted(true); // Set upload attempt flag
+    setParsedData([]); // Reset parsed data for a new upload attempt
+  
+    try {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('resume', file);
+  
+        if (data) {
+          formData.append('data', JSON.stringify(data));
+        }
+  
+        const response = await axios.post('http://localhost:5000/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
   
-        // Prepare user data
         const skillScores = response.data.skillScores || {};
-        const bestSuitedSkill = Object.keys(skillScores).reduce((a, b) => skillScores[a] > skillScores[b] ? a : b, Object.keys(skillScores)[0]);
+        const bestSuitedSkill = Object.keys(skillScores).reduce((a, b) => 
+          skillScores[a] > skillScores[b] ? a : b, 
+          Object.keys(skillScores)[0]
+        );
   
         const newUserData = {
           resume: response.data.text,
           name: response.data.name || 'Not mentioned',
           email: response.data.email || 'Not mentioned',
           phone: response.data.phone || 'Not mentioned',
-          college: response.data.college || 'Not mentioned',
           skillScores: skillScores,
-          educationPercentages: response.data.educationPercentages || {},
-          bestSuitedSkill: bestSuitedSkill || 'Not mentioned', // Set best suited skill based on highest score
-          resumeName: file.name
+          bestSuitedSkill: bestSuitedSkill || 'Not mentioned',
+          resumeName: file.name,
         };
   
-        setResumeText(response.data.text); // Set the resume text
-  
-        // Check if any skill score is greater than 70%
-        const hasHighSkillScore = Object.values(skillScores).some(score => score >= 0);
-  
+        const hasHighSkillScore = Object.values(skillScores).some(score => score >= 10);
         if (hasHighSkillScore) {
-          // Append new user data to parsedData state
           setParsedData(prevData => [...prevData, newUserData]);
-  
-          // Store the updated array back in local storage
           const existingData = localStorage.getItem('candidate');
           const parsedExistingData = existingData ? JSON.parse(existingData) : [];
           parsedExistingData.push(newUserData);
-          // localStorage.setItem('candidate', JSON.stringify(parsedExistingData));
+          localStorage.setItem('candidate', JSON.stringify(parsedExistingData));
         }
-  
-      } catch (error) {
-        console.error('Error uploading file:', error);
-        setError('Error processing the resume. Please try again.');
       }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      setError('Error processing the resume. Please try again.');
+    } finally {
+      setLoading(false); // Hide spinner after all resumes are processed
     }
-    setLoading(false); // Stop loading spinner
-    message.success('All resumes have been processed and stored in local storage.');
   };
-
+  
   const handleDownloadCSV = () => {
-    // Step 1: Retrieve existing data from local storage
     const existingData = localStorage.getItem('candidate');
     const parsedData = existingData ? JSON.parse(existingData) : [];
-  
-    // Step 2: Prepare CSV rows
     const csvRows = [];
-    const headers = ['Name', 'Email', 'Phone', 'College', '10th', '12th', 'UG', 'PG', 'Best Suited Skill','Resume Name']; // Add header for Best Suited Skill
-  
-    // Add skill headers dynamically
+    const headers = ['Name', 'Email', 'Phone', 'Best Suited Skill', 'Resume Name'];
     const skillHeaders = new Set();
     parsedData.forEach(data => {
       Object.keys(data.skillScores).forEach(skill => skillHeaders.add(skill));
     });
     skillHeaders.forEach(skill => headers.push(skill));
-  
-    csvRows.push(headers.join(',')); // Add headers
-  
-    // Step 3: Populate CSV rows
+    csvRows.push(headers.join(','));
+
     parsedData.forEach(data => {
       const row = [];
       row.push(data.name || 'Not mentioned');
       row.push(data.email || 'Not mentioned');
       row.push(data.phone || 'Not mentioned');
-      row.push(data.college || 'Not mentioned');
-      row.push(data.educationPercentages['10th'] || 'Not mentioned');
-      row.push(data.educationPercentages['12th'] || 'Not mentioned');
-      row.push(data.educationPercentages['UG'] || 'Not mentioned');
-      row.push(data.educationPercentages['PG'] || 'Not mentioned');
-      row.push(data.bestSuitedSkill || 'Not mentioned'); // Add Best Suited Skill
+      row.push(data.bestSuitedSkill || 'Not mentioned');
       row.push(data.resumeName || 'Not mentioned');
-
-      // Add skill scores
       skillHeaders.forEach(skill => {
-        row.push(data.skillScores[skill] || 'Not mentioned');
+        row.push(data.skillScores[skill] || 0);
       });
 
-      csvRows.push(row.join(',')); // Add row
+      csvRows.push(row.join(','));
     });
 
     const csvString = csvRows.join('\n');
-
-    // Step 4: Create a Blob and download link
     const blob = new Blob([csvString], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.setAttribute('href', url);
     a.setAttribute('download', 'candidate.csv');
     a.click();
-    window.URL.revokeObjectURL(url); // Clean up
+    window.URL.revokeObjectURL(url);
   };
 
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.removeItem('candidate');
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
+
   return (
+    <Spin spinning={loading} size='large'  style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}>
     <div className="container">
-      
       <div className="form-container">
-        <Dragger 
-          name="file" 
-          multiple 
-          action="https://resume-parsing-server-a9p3.onrender.com/upload" 
-          onChange={handleFileChange} 
-          onDrop={(e) => console.log('Dropped files', e.dataTransfer.files)}
-        >
-          <p className="ant-upload-drag-icon">
-            <FaCloudUploadAlt  className='upload'/>
-          </p>
-          <p className="ant-upload-text">Click or drag file to this area to upload</p>
-         
-        </Dragger>
-        <Button type='primary' className='uploadResume' onClick={handleUpload}>Upload Resumes</Button>
+          <Dragger
+            name="file"
+            beforeUpload={() => false}
+            multiple
+            onChange={handleFileChange}
+            onDrop={(e) => console.log('Dropped files', e.dataTransfer.files)}
+          >
+            <p className="ant-upload-drag-icon">
+              <FaCloudUploadAlt className='upload' />
+            </p>
+            <p className="ant-upload-text">Click or drag file to this area to upload</p>
+          </Dragger>
+          <Button type='primary' className='uploadResume' onClick={handleUpload}>Submit</Button>
       </div>
 
       {error && <div className="error-message">{error}</div>}
+
+      {uploadAttempted && parsedData.length === 0 && !loading && (
+        <p>No data could be parsed from the uploaded resumes. Please try again with different files.</p>
+      )}
 
       {parsedData.length > 0 && (
         <div className="parsed-data">
@@ -161,7 +158,6 @@ const FileUpload = ({data}) => {
               <p>Name: {data.name}</p>
               <p>Email: {data.email}</p>
               <p>Phone: {data.phone}</p>
-              <p>College: {data.college}</p>
               <p>Best Suited Skill: {data.bestSuitedSkill}</p>
               <h5>Skills Breakdown:</h5>
               <ul>
@@ -174,8 +170,15 @@ const FileUpload = ({data}) => {
         </div>
       )}
 
-      <Button type='primary' className='downloadCSV' onClick={handleDownloadCSV}>Download Excel</Button>
+      
+
+      {localStorage.getItem('candidate') && (
+        <Button type='primary' className='downloadCSV' onClick={handleDownloadCSV}>
+          Download Excel
+        </Button>
+      )}
     </div>
+              </Spin>
   );
 };
 

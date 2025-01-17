@@ -25,3 +25,8 @@ body {
 
 
 
+
+.ant-tooltip-arrow , .ant-tooltip-content{
+    display: none !important;
+}
+
